@@ -1,5 +1,6 @@
 '''Module 3: count black and white pixels and compute the percentage of white pixels in a .jpg image'''
 #practice 
+#meg practice
 import time  # New import for timing
 from termcolor import colored
 import cv2
