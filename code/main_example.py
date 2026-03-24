@@ -1,5 +1,6 @@
 '''Module 3: count black and white pixels and compute the percentage of white pixels in a .jpg image'''
 
+import time  # New import for timing
 from termcolor import colored
 import cv2
 import numpy as np
@@ -18,34 +19,38 @@ filenames = [
 # Depths corresponding to each image
 depths = [9200, 3250, 8000, 200, 7300, 6300]
 
-white_percents = [] # IMPROVEMENT: Only store the values we actually need
+white_percents = []
+total_analysis_time = 0  # Variable to accumulate pure processing time
 
-print(colored("Counts of pixel by color in each image", "yellow")) # Print a header for the output
+print(colored("Counts of pixel by color in each image", "yellow"))
 
-# IMPROVEMENT: Use zip() instead of range(len(...)) indexing
-# This makes the loop cleaner and avoids unnecessary indexing.
-for filename, depth in zip(filenames, depths): # Loop through each filename and corresponding depth
+for filename, depth in zip(filenames, depths):
+    
+    # --- START TIMING ANALYSIS ---
+    analysis_start = time.perf_counter()
 
     # Load image in grayscale
     img = cv2.imread(filename, 0) 
-
+    
     # Convert to binary
     _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
 
     # Count pixels
-    # IMPROVEMENT: Process each image immediately instead of storing all images first
     white = np.sum(binary == 255)
     black = np.sum(binary == 0)
-    # IMPROVEMENT: Compute total once instead of repeating calculation
     total = white + black
 
     white_percent = 100 * white / total
     white_percents.append(white_percent)
+    
+    # --- STOP TIMING ANALYSIS ---
+    analysis_end = time.perf_counter()
+    total_analysis_time += (analysis_end - analysis_start)
 
-    # Print results
+    # Print results (This part is NOT timed)
     print(colored(f"{filename}", "red"))
-    print(colored(f"White pixels: {white}", "white"))
-    print(colored(f"Black pixels: {black}", "black"))
+    print(colored(f"White pixels: {white}", "light_grey")) # 'white' isn't always visible on light themes
+    print(colored(f"Black pixels: {black}", "dark_grey"))
     print(f"{white_percent:.2f}% White | Depth: {depth} microns\n")
 
 # Save results to CSV
@@ -55,10 +60,13 @@ df = pd.DataFrame({
     "White percents": white_percents
 })
 
-df.to_csv("Percent_White_Pixels.csv", index=False) # Save the DataFrame to a .csv file without the index
+df.to_csv("Percent_White_Pixels.csv", index=False)
 
-print("The .csv file 'Percent_White_Pixels.csv' has been created.") # Print a message confirming that the .csv file has been created
-
+print("-" * 30)
+print(f"The .csv file 'Percent_White_Pixels.csv' has been created.")
+# Final timing report
+print(colored(f"Total analysis time (excluding prints): {total_analysis_time:.4f} seconds", "cyan"))
+print(colored(f"Average time per image: {total_analysis_time/len(filenames):.4f} seconds", "cyan"))
 
 ##############
 # LECTURE 2: UNCOMMENT BELOW
