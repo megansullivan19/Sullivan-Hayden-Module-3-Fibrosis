@@ -12,7 +12,7 @@ filenames = [
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010136.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010129.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010119.jpg",
-    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010032.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010032.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010113.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010107.jpg",
 ]
