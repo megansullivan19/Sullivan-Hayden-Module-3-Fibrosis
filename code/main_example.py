@@ -12,13 +12,13 @@ filenames = [
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010136.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010129.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010119.jpg",
-    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010032.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010032.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010113.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010107.jpg",
 ]
 
 # Depths corresponding to each image
-depths = [9200, 3250, 8000, 200, 7300, 6300]
+depths = [9200, 3250, 8000, 500, 7300, 6300]
 
 white_percents = []
 total_analysis_time = 0  # Variable to accumulate pure processing time
@@ -82,7 +82,7 @@ x = depths
 y = white_percents
 
 # You can also use 'quadratic', 'cubic', etc.
-i = interp1d(x, y, kind='linear')
+i = interp1d(x, y, kind='linear', fill_value="extrapolate")
 interpolate_point = i(interpolate_depth)
 print(colored(
     f'The interpolated point is at the x-coordinate {interpolate_depth} and y-coordinate {interpolate_point}.', "green"))
