@@ -1,6 +1,5 @@
 '''Module 3: count black and white pixels and compute the percentage of white pixels in a .jpg image'''
-#practice 
-#meg practice
+
 import time  # New import for timing
 from termcolor import colored
 import cv2
@@ -13,12 +12,18 @@ filenames = [
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010129.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010119.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010032.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010071.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010113.jpg",
     r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010107.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_SK658 Slobe ch010149.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010018.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010039.jpg",
+    r"/Users/megansullivan/Desktop/Comp BME/Sullivan-Hayden-Module-3-Fibrosis/images/MASK_Sk658 Llobe ch010160.jpg",
+
 ]
 
 # Depths corresponding to each image
-depths = [9200, 3250, 8000, 500, 7300, 6300]
+depths = [9200, 3250, 8000, 500, 7100, 7300, 6300, 3350, 90, 15, 7200]
 
 white_percents = []
 total_analysis_time = 0  # Variable to accumulate pure processing time
@@ -73,49 +78,142 @@ print(colored(f"Average time per image: {total_analysis_time/len(filenames):.4f}
 #LECTURE 2: UNCOMMENT BELOW
 
 # Interpolate a point: given a depth, find the corresponding white pixel percentage
-from scipy.interpolate import interp1d
+# from scipy.interpolate import interp1d
+# import matplotlib.pyplot as plt
+# interpolate_depth = float(input(colored(
+#     "Enter the depth at which you want to interpolate a point (in microns): ", "yellow")))
+
+# x = depths
+# y = white_percents
+
+# # You can also use 'quadratic', 'cubic', etc.
+# i = interp1d(x, y, kind='linear', fill_value="extrapolate")
+# interpolate_point = i(interpolate_depth)
+# print(colored(
+#     f'The interpolated point is at the x-coordinate {interpolate_depth} and y-coordinate {interpolate_point}.', "green"))
+
+# depths_i = depths[:]
+# depths_i.append(interpolate_depth)
+# white_percents_i = white_percents[:]
+# white_percents_i.append(interpolate_point)
+
+
+# # make two plots: one that doesn't contain the interpolated point, just the data calculated from your images, and one that also contains the interpolated point (shown in red)
+# fig, axs = plt.subplots(2, 1)
+
+# axs[0].scatter(depths, white_percents, marker='o', linestyle='-', color='blue')
+# axs[0].set_title('Plot of depth of image vs percentage white pixels')
+# axs[0].set_xlabel('depth of image (in microns)')
+# axs[0].set_ylabel('white pixels as a percentage of total pixels')
+# axs[0].grid(True)
+
+
+# axs[1].scatter(depths_i, white_percents_i, marker='o',
+#                linestyle='-', color='blue')
+# axs[1].set_title(
+#     'Plot of depth of image vs percentage white pixels with interpolated point (in red)')
+# axs[1].set_xlabel('depth of image (in microns)')
+# axs[1].set_ylabel('white pixels as a percentage of total pixels')
+# axs[1].grid(True)
+# axs[1].scatter(depths_i[len(depths_i)-1], white_percents_i[len(white_percents_i)-1],
+#                color='red', s=100, label='Highlighted point')
+
+
+# # Adjust layout to prevent overlap
+# plt.tight_layout()
+# plt.show()
+
+#ADDITIONAL TESTS
+from scipy import stats
+
+# Filter data based on your filenames (Slobe vs Llobe)
+slobe_data = [p for f, p in zip(filenames, white_percents) if "Slobe" in f]
+llobe_data = [p for f, p in zip(filenames, white_percents) if "Llobe" in f]
+
+# Perform an Independent T-Test
+# Null Hypothesis: There is no difference in fibrosis between upper and lower lobes.
+t_stat, p_val = stats.ttest_ind(llobe_data, slobe_data)
+
+print(f"Lower Lobe Avg: {np.mean(llobe_data):.2f}%")
+print(f"Upper Lobe Avg: {np.mean(slobe_data):.2f}%")
+print(f"P-value: {p_val:.4f}")
+
+if p_val < 0.05:
+    print("Code-Based Proof: The increase in the lower lobe is statistically significant.")
+
+#DIFFERENT DATA SET
+import os
+import glob
+import cv2
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-interpolate_depth = float(input(colored(
-    "Enter the depth at which you want to interpolate a point (in microns): ", "yellow")))
+import seaborn as sns
+from termcolor import colored
 
-x = depths
-y = white_percents
+# --- 1. CONFIGURATION ---
+# Path to your unzipped OSF Histology folder
+base_path = r"/Users/megansullivan/Downloads/Lung fibrosis (Ashcroft)/training/0" 
 
-# You can also use 'quadratic', 'cubic', etc.
-i = interp1d(x, y, kind='linear', fill_value="extrapolate")
-interpolate_point = i(interpolate_depth)
-print(colored(
-    f'The interpolated point is at the x-coordinate {interpolate_depth} and y-coordinate {interpolate_point}.', "green"))
+# --- 2. THE ANALYSIS ENGINE ---
+def analyze_trichrome_fibrosis(img_path):
+    """Calculates blue-stained collagen percentage for a histology tile."""
+    img = cv2.imread(img_path)
+    if img is None:
+        return None
+    
+    # Convert to HSV for color separation
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    
+    # Target Blue/Cyan (Collagen in Masson's Trichrome)
+    # Range: Hue(90-135), Saturation(40-255), Value(40-255)
+    lower_blue = np.array([90, 40, 40])
+    upper_blue = np.array([135, 255, 255])
+    
+    # Create and clean the mask
+    fibrosis_mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    kernel = np.ones((3,3), np.uint8)
+    fibrosis_mask = cv2.morphologyEx(fibrosis_mask, cv2.MORPH_OPEN, kernel)
+    
+    # Calculate percentage
+    white_pixels = np.sum(fibrosis_mask == 255)
+    return 100 * (white_pixels / fibrosis_mask.size)
 
-depths_i = depths[:]
-depths_i.append(interpolate_depth)
-white_percents_i = white_percents[:]
-white_percents_i.append(interpolate_point)
+# --- 3. EXECUTION ---
+print(colored("🚀 Processing OSF Population Data...", "cyan"))
 
+search_pattern = os.path.join(base_path, "**", "*.png")
+all_files = glob.glob(search_pattern, recursive=True)
 
-# make two plots: one that doesn't contain the interpolated point, just the data calculated from your images, and one that also contains the interpolated point (shown in red)
-fig, axs = plt.subplots(2, 1)
+# Analyzing a subset for speed (e.g., first 500), or remove [:500] for all 4983
+osf_results = []
+for path in all_files[:500]: 
+    val = analyze_trichrome_fibrosis(path)
+    if val is not None:
+        osf_results.append(val)
 
-axs[0].scatter(depths, white_percents, marker='o', linestyle='-', color='blue')
-axs[0].set_title('Plot of depth of image vs percentage white pixels')
-axs[0].set_xlabel('depth of image (in microns)')
-axs[0].set_ylabel('white pixels as a percentage of total pixels')
-axs[0].grid(True)
+# --- 4. RESULTS & VISUALIZATION ---
+if osf_results:
+    mu = np.mean(osf_results)
+    std = np.std(osf_results)
+    
+    print("\n" + "="*40)
+    print(colored(f"📊 OSF HISTOLOGY BASELINE (n={len(osf_results)})", "yellow", attrs=['bold']))
+    print(f"Mean Fibrosis: {mu:.2f}%")
+    print(f"Std Deviation: {std:.2f}%")
+    print(f"Max Detected:  {np.max(osf_results):.2f}%")
+    print("="*40)
 
+    # Plot the Distribution
+    plt.figure(figsize=(10, 6))
+    sns.histplot(osf_results, kde=True, color='magenta')
+    plt.title("Distribution of Fibrosis in OSF Histology Dataset")
+    plt.xlabel("Fibrosis Percentage (%)")
+    plt.ylabel("Frequency")
+    plt.show()
 
-axs[1].scatter(depths_i, white_percents_i, marker='o',
-               linestyle='-', color='blue')
-axs[1].set_title(
-    'Plot of depth of image vs percentage white pixels with interpolated point (in red)')
-axs[1].set_xlabel('depth of image (in microns)')
-axs[1].set_ylabel('white pixels as a percentage of total pixels')
-axs[1].grid(True)
-axs[1].scatter(depths_i[len(depths_i)-1], white_percents_i[len(white_percents_i)-1],
-               color='red', s=100, label='Highlighted point')
-
-
-# Adjust layout to prevent overlap
-plt.tight_layout()
-plt.show()
-
-# hello 
+    # Save results for your report
+    pd.DataFrame({'Fibrosis_Percent': osf_results}).to_csv("osf_baseline.csv", index=False)
+    print(colored("\n✅ Baseline saved to 'osf_baseline.csv'", "green"))
+else:
+    print(colored("❌ Error: No images found at the specified path.", "red"))
